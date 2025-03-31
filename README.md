@@ -2,6 +2,17 @@
 
 A terminal-based application for reporting and tracking infrastructure issues within a community. This system allows community members to report various infrastructure problems and administrators to manage these reports.
 
+## Table of Contents
+- [Features](#features)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Database Structure](#database-structure)
+  - [Users Table](#users-table)
+  - [Reports Table](#reports-table)
+- [Application Flow](#application-flow)
+- [Security Notes](#security-notes)
+
 ## Features
 
 - **User Management**
@@ -113,7 +124,3 @@ The application uses two main tables:
 
 - Password storage is currently implemented without proper hashing.
 - Database credentials are hardcoded in the application.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
