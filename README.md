@@ -83,8 +83,8 @@ A terminal-based application for reporting and tracking infrastructure issues wi
 
 3. Use the following credentials for to access admin account:
 
-   - Username: `root`
-   - Password: `(your password)`
+   - Username: `admin`
+   - Password: `admin123`
 
 4. Navigate through the application using the numeric menu options.
 
