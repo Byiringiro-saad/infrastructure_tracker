@@ -7,13 +7,52 @@ def connect_to_db():
             user="root",
             password="root",
             host="localhost",
-            database="infrastructure_tracker"
+            database="infrastructure_db"
         )
         logging.info("Successfully connected to MySQL database")
         return conn
     except mysql.connector.Error as err:
         logging.error(f"Error connecting to database: {err}")
         return None
+
+def setup_database():
+    conn = mysql.connector.connect(
+        user="root",
+        password="root"
+        host="localhost",
+    )
+    cursor = conn.cursor()
+    cursor.execute("DROP DATABASE IF EXISTS infrastructure_db;")
+    cursor.execute("CREATE DATABASE infrastructure_db;")
+    cursor.execute("USE infrastructure_db;")
+    
+    cursor.execute("""
+        CREATE TABLE users (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            username VARCHAR(50) UNIQUE NOT NULL,
+            password VARCHAR(255) NOT NULL,
+            role ENUM('user', 'admin') NOT NULL DEFAULT 'user'
+        );
+    """)
+    
+    cursor.execute("""
+        CREATE TABLE reports (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            issue_type VARCHAR(100) NOT NULL,
+            description TEXT NOT NULL,
+            location VARCHAR(255) NOT NULL,
+            status ENUM('Pending', 'In Progress', 'Resolved') NOT NULL DEFAULT 'Pending',
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+    """)
+    
+    cursor.execute("INSERT INTO users (username, password, role) VALUES ('admin', 'admin123', 'admin')")
+    conn.commit()
+    
+    logging.info("Database setup completed successfully")
+    cursor.close()
+    conn.close()
 
 def signup():
     username = input("Enter username: ")
@@ -72,6 +111,7 @@ def admin_dashboard():
 
 def main():
     logging.basicConfig(level=logging.INFO)
+    setup_database()
     while True:
         print("\n1. Sign Up\n2. Log In\n3. Exit")
         choice = input("Choose an option: ")
