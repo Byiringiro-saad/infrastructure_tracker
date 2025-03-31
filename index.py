@@ -6,8 +6,29 @@ import mysql.connector
 from prettytable import PrettyTable
 from colorama import init, Fore, Style
 
-# Initialize colorama for cross-platform colored terminal text
 init()
+
+def install_dependencies():
+    """Check and install required dependencies."""
+    import importlib.util
+    import subprocess
+    import sys
+    
+    required_packages = ['mysql-connector-python', 'prettytable', 'colorama']
+    
+    for package in required_packages:
+        if package == 'mysql-connector-python':
+            check_package = 'mysql.connector'
+        else:
+            check_package = package
+            
+        spec = importlib.util.find_spec(check_package)
+        if spec is None:
+            print(f"Installing {package}...")
+            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+            print(f"{package} installed successfully!")
+        else:
+            print(f"{package} is already installed.")
 
 def clear_screen():
     """Clear the terminal screen based on OS"""
@@ -1082,4 +1103,5 @@ def main():
             input("\nPress Enter to continue...")
 
 if __name__ == "__main__":
+    install_dependencies()
     main()
