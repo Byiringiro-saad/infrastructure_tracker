@@ -5,15 +5,18 @@ A terminal-based application for reporting and tracking infrastructure issues wi
 ## Features
 
 - **User Management**
+
   - User registration and login
   - Role-based access control (admin and regular users)
 
 - **User Features**
+
   - Report infrastructure issues
   - Track status of submitted reports
   - View detailed report information
 
 - **Admin Features**
+
   - View all reports
   - Search reports by various criteria
   - Update report status
@@ -39,12 +42,14 @@ A terminal-based application for reporting and tracking infrastructure issues wi
 ## Installation
 
 1. Clone the repository:
+
    ```
    git clone https://github.com/Byiringiro-saad/infrastructure_tracker
    cd infrastructure_tracker
    ```
 
 2. Install the required Python packages:
+
    ```
    pip install mysql-connector-python prettytable colorama
    ```
@@ -58,15 +63,17 @@ A terminal-based application for reporting and tracking infrastructure issues wi
 ## Usage
 
 1. Run the application:
+
    ```
    python index.py
    ```
 
 2. At first run, select 'y' when asked to set up the database.
 
-3. Use the following credentials for initial admin access:
-   - Username: `root`
-   - Password: `(your password)`
+3. Use the following credentials for to access admin account:
+
+   - Username: `admin`
+   - Password: `admin123`
 
 4. Navigate through the application using the numeric menu options.
 
@@ -75,6 +82,7 @@ A terminal-based application for reporting and tracking infrastructure issues wi
 The application uses two main tables:
 
 ### Users Table
+
 - id (Primary Key)
 - username (Unique)
 - password
@@ -82,6 +90,7 @@ The application uses two main tables:
 - created_at
 
 ### Reports Table
+
 - id (Primary Key)
 - user_id (Foreign Key)
 - issue_type
