@@ -2,33 +2,18 @@ import os
 import time
 import logging
 import getpass
-import mysql.connector
+import jaydebeapi
 from prettytable import PrettyTable
 from colorama import init, Fore, Style
 
 init()
 
-def install_dependencies():
-    """Check and install required dependencies."""
-    import importlib.util
-    import subprocess
-    import sys
-    
-    required_packages = ['mysql-connector-python', 'prettytable', 'colorama']
-    
-    for package in required_packages:
-        if package == 'mysql-connector-python':
-            check_package = 'mysql.connector'
-        else:
-            check_package = package
-            
-        spec = importlib.util.find_spec(check_package)
-        if spec is None:
-            print(f"Installing {package}...")
-            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-            print(f"{package} installed successfully!")
-        else:
-            print(f"{package} is already installed.")
+# H2 database configuration
+H2_DRIVER = 'org.h2.Driver'
+H2_URL = 'jdbc:h2:./infrastructure_db'
+H2_USER = 'sa'
+H2_PASSWORD = ''
+
 
 def clear_screen():
     """Clear the terminal screen based on OS"""
@@ -47,15 +32,15 @@ def display_banner():
 def connect_to_db():
     """Connect to MySQL database"""
     try:
-        conn = mysql.connector.connect(
-            user="root",
-            password="root",
-            host="localhost",
-            database="infrastructure_db"
+        conn = jaydebeapi.connect(
+            H2_DRIVER,
+            H2_URL,
+            [H2_USER, H2_PASSWORD],
+            './h2-2.3.232.jar'
         )
         logging.info("Successfully connected to MySQL database")
         return conn
-    except mysql.connector.Error as err:
+    except jaydebeapi.Error as err:
         logging.error(f"Error connecting to database: {err}")
         print(f"{Fore.RED}Database connection error: {err}{Style.RESET_ALL}")
         return None
@@ -63,10 +48,11 @@ def connect_to_db():
 def setup_database():
     """Set up the database schema and initial admin user"""
     try:
-        conn = mysql.connector.connect(
-            user="root",
-            password="root",
-            host="localhost",
+        conn = jaydebeapi.connect(
+            H2_DRIVER,
+            H2_URL,
+            [H2_USER, H2_PASSWORD],
+            './h2-2.3.232.jar'
         )
         
         cursor = conn.cursor()
@@ -109,7 +95,7 @@ def setup_database():
         print(f"{Fore.GREEN}Database setup completed successfully!{Style.RESET_ALL}")
         cursor.close()
         conn.close()
-    except mysql.connector.Error as err:
+    except jaydebeapi.Error as err:
         logging.error(f"Error setting up database: {err}")
         print(f"{Fore.RED}Database setup error: {err}{Style.RESET_ALL}")
 
@@ -167,7 +153,7 @@ def signup():
                 conn.close()
                 input("\nPress Enter to continue...")
                 return
-            except mysql.connector.Error as err:
+            except jaydebeapi.Error as err:
                 logging.error(f"Error during registration: {err}")
                 print(f"{Fore.RED}Error during registration: {err}{Style.RESET_ALL}")
                 cursor.close()
@@ -292,7 +278,7 @@ def report_issue(user_id):
             cursor.close()
             conn.close()
             input("\nPress Enter to continue...")
-        except mysql.connector.Error as err:
+        except jaydebeapi.Error as err:
             logging.error(f"Error submitting report: {err}")
             print(f"{Fore.RED}Error submitting report: {err}{Style.RESET_ALL}")
             cursor.close()
@@ -1103,5 +1089,4 @@ def main():
             input("\nPress Enter to continue...")
 
 if __name__ == "__main__":
-    install_dependencies()
     main()
