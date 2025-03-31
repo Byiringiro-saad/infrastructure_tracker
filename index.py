@@ -1084,4 +1084,8 @@ def main():
             input("\nPress Enter to continue...")
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print(f"\n{Fore.GREEN}Thank you for using our system. Goodbye!{Style.RESET_ALL}")
+
