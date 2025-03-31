@@ -25,7 +25,6 @@ class InfrastructureTracker:
             self.connection = mysql.connector.connect(
                 user=os.getenv('DB_USER', 'root'),
                 host=os.getenv('DB_HOST', 'localhost'),
-                password=os.getenv('DB_PASSWORD', 'root'),
                 database=os.getenv('DB_NAME', 'infrastructure_tracker')
             )
             
