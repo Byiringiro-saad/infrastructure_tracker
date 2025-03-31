@@ -1,17 +1,17 @@
 import os
+import sys
 import logging
 import mysql.connector
 from datetime import datetime
 from dotenv import load_dotenv
 from mysql.connector import Error
 
-# Set up logging
+# Set up logging to console instead of file to avoid permission issues
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    filename='infrastructure_tracker.log'
+    stream=sys.stdout  # Log to console instead of file
 )
-
 logger = logging.getLogger('infrastructure_tracker')
 
 # Load environment variables from .env file
@@ -25,7 +25,7 @@ class InfrastructureTracker:
             self.connection = mysql.connector.connect(
                 user=os.getenv('DB_USER', 'root'),
                 host=os.getenv('DB_HOST', 'localhost'),
-                password=os.getenv('DB_PASSWORD', ''),
+                password=os.getenv('DB_PASSWORD', 'root'),
                 database=os.getenv('DB_NAME', 'infrastructure_tracker')
             )
             
@@ -37,15 +37,15 @@ class InfrastructureTracker:
             raise
             
     def __del__(self):
-        """Close database connection when object is destroyed"""    
+        """Close database connection when object is destroyed"""
         try:
             if hasattr(self, 'connection') and self.connection.is_connected():
                 self.cursor.close()
                 self.connection.close()
-            logger.info("MySQL connection closed")
+                logger.info("MySQL connection closed")
         except Exception as e:
-        # Just log the error instead of letting it propagate
-            logger.warning(f"Error during cleanup: {e}")
+            # Just log the error without using logger to avoid potential recursive issues
+            print(f"Error during cleanup: {e}")
             
     def setup_database(self):
         """Create necessary tables if they don't exist"""
@@ -127,6 +127,15 @@ class InfrastructureTracker:
     def register_user(self, username, password, email, is_admin=False):
         """Register a new user"""
         try:
+            # Check if user already exists
+            self.cursor.execute("SELECT user_id FROM users WHERE username = %s", (username,))
+            existing_user = self.cursor.fetchone()
+            
+            if existing_user:
+                logger.info(f"User {username} already exists, skipping registration")
+                return existing_user['user_id']
+                
+            # If user doesn't exist, create new user
             query = """
             INSERT INTO users (username, password, email, is_admin)
             VALUES (%s, %s, %s, %s)
@@ -286,6 +295,7 @@ class InfrastructureTracker:
 
 # Example usage
 if __name__ == "__main__":
+    tracker = None
     try:
         # Initialize tracker and setup database
         tracker = InfrastructureTracker()
@@ -318,3 +328,12 @@ if __name__ == "__main__":
         
     except Exception as e:
         print(f"Error: {e}")
+    finally:
+        # Explicitly close the connection to avoid __del__ issues
+        if tracker and hasattr(tracker, 'connection') and tracker.connection.is_connected():
+            try:
+                tracker.cursor.close()
+                tracker.connection.close()
+                print("Database connection closed successfully")
+            except Exception as e:
+                print(f"Error closing connection: {e}")
