@@ -25,6 +25,7 @@ class InfrastructureTracker:
             self.connection = mysql.connector.connect(
                 user=os.getenv('DB_USER', 'root'),
                 host=os.getenv('DB_HOST', 'localhost'),
+                password=os.getenv('DB_PASSWORD', ''),
                 database=os.getenv('DB_NAME', 'infrastructure_tracker')
             )
             
@@ -36,11 +37,15 @@ class InfrastructureTracker:
             raise
             
     def __del__(self):
-        """Close database connection when object is destroyed"""
-        if hasattr(self, 'connection') and self.connection.is_connected():
-            self.cursor.close()
-            self.connection.close()
+        """Close database connection when object is destroyed"""    
+        try:
+            if hasattr(self, 'connection') and self.connection.is_connected():
+                self.cursor.close()
+                self.connection.close()
             logger.info("MySQL connection closed")
+        except Exception as e:
+        # Just log the error instead of letting it propagate
+            logger.warning(f"Error during cleanup: {e}")
             
     def setup_database(self):
         """Create necessary tables if they don't exist"""
