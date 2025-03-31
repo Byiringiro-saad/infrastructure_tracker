@@ -1,14 +1,10 @@
 import os
 import sys
-import locale
 import logging
 import mysql.connector
 from datetime import datetime
 from dotenv import load_dotenv
 from mysql.connector import Error
-
-# Set locale to UTF-8 to avoid encoding issues
-locale.setlocale(locale.LC_ALL, 'C.UTF-8')  # Or 'POSIX'
 
 # Set up logging to console instead of file to avoid permission issues
 logging.basicConfig(
@@ -16,6 +12,7 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     stream=sys.stdout  # Log to console instead of file
 )
+
 logger = logging.getLogger('infrastructure_tracker')
 
 # Load environment variables from .env file
@@ -27,10 +24,10 @@ class InfrastructureTracker:
         try:
             # Get database credentials from environment variables
             self.connection = mysql.connector.connect(
-                user=os.getenv('DB_USER', 'root'),
-                host=os.getenv('DB_HOST', 'localhost'),
-                password=os.getenv('DB_PASSWORD', 'root'),
-                database=os.getenv('DB_NAME', 'infrastructure_tracker')
+                user="root",
+                password="root",
+                host="localhost",
+                database="infrastructure_tracker"
             )
             
             if self.connection.is_connected():
@@ -50,7 +47,7 @@ class InfrastructureTracker:
         except Exception as e:
             # Just log the error without using logger to avoid potential recursive issues
             print(f"Error during cleanup: {e}")
-            
+
     def setup_database(self):
         """Create necessary tables if they don't exist"""
         try:
