@@ -1,10 +1,14 @@
 import os
 import sys
+import locale
 import logging
 import mysql.connector
 from datetime import datetime
 from dotenv import load_dotenv
 from mysql.connector import Error
+
+# Set locale to UTF-8 to avoid encoding issues
+locale.setlocale(locale.LC_ALL, 'C.UTF-8')  # Or 'POSIX'
 
 # Set up logging to console instead of file to avoid permission issues
 logging.basicConfig(
