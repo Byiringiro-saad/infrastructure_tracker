@@ -2,18 +2,11 @@ import os
 import time
 import logging
 import getpass
-import jaydebeapi
+import mysql.connector
 from prettytable import PrettyTable
 from colorama import init, Fore, Style
 
 init()
-
-# H2 database configuration
-H2_DRIVER = 'org.h2.Driver'
-H2_URL = 'jdbc:h2:./infrastructure_db'
-H2_USER = 'sa'
-H2_PASSWORD = ''
-
 
 def clear_screen():
     """Clear the terminal screen based on OS"""
@@ -32,15 +25,15 @@ def display_banner():
 def connect_to_db():
     """Connect to MySQL database"""
     try:
-        conn = jaydebeapi.connect(
-            H2_DRIVER,
-            H2_URL,
-            [H2_USER, H2_PASSWORD],
-            './h2-2.3.232.jar'
+        conn = mysql.connector.connect(
+            user="root",
+            password="root",
+            host="localhost",
+            database="infrastructure_db"
         )
         logging.info("Successfully connected to MySQL database")
         return conn
-    except jaydebeapi.Error as err:
+    except mysql.connector.Error as err:
         logging.error(f"Error connecting to database: {err}")
         print(f"{Fore.RED}Database connection error: {err}{Style.RESET_ALL}")
         return None
@@ -48,11 +41,10 @@ def connect_to_db():
 def setup_database():
     """Set up the database schema and initial admin user"""
     try:
-        conn = jaydebeapi.connect(
-            H2_DRIVER,
-            H2_URL,
-            [H2_USER, H2_PASSWORD],
-            './h2-2.3.232.jar'
+        conn = mysql.connector.connect(
+            user="root",
+            password="root",
+            host="localhost",
         )
         
         cursor = conn.cursor()
@@ -95,7 +87,7 @@ def setup_database():
         print(f"{Fore.GREEN}Database setup completed successfully!{Style.RESET_ALL}")
         cursor.close()
         conn.close()
-    except jaydebeapi.Error as err:
+    except mysql.connector.Error as err:
         logging.error(f"Error setting up database: {err}")
         print(f"{Fore.RED}Database setup error: {err}{Style.RESET_ALL}")
 
@@ -153,7 +145,7 @@ def signup():
                 conn.close()
                 input("\nPress Enter to continue...")
                 return
-            except jaydebeapi.Error as err:
+            except mysql.connector.Error as err:
                 logging.error(f"Error during registration: {err}")
                 print(f"{Fore.RED}Error during registration: {err}{Style.RESET_ALL}")
                 cursor.close()
@@ -278,7 +270,7 @@ def report_issue(user_id):
             cursor.close()
             conn.close()
             input("\nPress Enter to continue...")
-        except jaydebeapi.Error as err:
+        except mysql.connector.Error as err:
             logging.error(f"Error submitting report: {err}")
             print(f"{Fore.RED}Error submitting report: {err}{Style.RESET_ALL}")
             cursor.close()
