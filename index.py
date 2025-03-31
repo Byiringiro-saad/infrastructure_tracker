@@ -4,9 +4,9 @@ import os
 import time
 import logging
 import getpass
-import mysql.connector
-from prettytable import PrettyTable
-from colorama import init, Fore, Style
+import mysql.connector # type: ignore
+from prettytable import PrettyTable # type: ignore
+from colorama import init, Fore, Style # type: ignore
 
 init()
 
