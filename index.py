@@ -800,3 +800,286 @@ def admin_search_reports():
             return
         else:
             print(f"{Fore.RED}Invalid choice. Please try again.{Style.RESET_ALL}")
+
+def admin_statistics():
+    """Admin function to display system statistics"""
+    clear_screen()
+    display_banner()
+    print(f"\n{Fore.MAGENTA}📊 SYSTEM STATISTICS{Style.RESET_ALL}\n")
+    
+    conn = connect_to_db()
+    if conn:
+        cursor = conn.cursor()
+        
+        # Get counts of reports by status
+        cursor.execute("""
+            SELECT status, COUNT(*) as count 
+            FROM reports 
+            GROUP BY status
+        """)
+        status_stats = cursor.fetchall()
+        
+        # Get counts of reports by issue type
+        cursor.execute("""
+            SELECT issue_type, COUNT(*) as count 
+            FROM reports 
+            GROUP BY issue_type
+        """)
+        type_stats = cursor.fetchall()
+        
+        # Get counts of reports by severity
+        cursor.execute("""
+            SELECT severity, COUNT(*) as count 
+            FROM reports 
+            GROUP BY severity
+        """)
+        severity_stats = cursor.fetchall()
+        
+        # Get user count
+        cursor.execute("SELECT COUNT(*) FROM users")
+        user_count = cursor.fetchone()[0]
+        
+        # Get total report count
+        cursor.execute("SELECT COUNT(*) FROM reports")
+        report_count = cursor.fetchone()[0]
+        
+        cursor.close()
+        conn.close()
+        
+        # Display statistics
+        print(f"{Fore.CYAN}General Statistics:{Style.RESET_ALL}")
+        print(f"Total Users: {user_count}")
+        print(f"Total Reports: {report_count}")
+        
+        print(f"\n{Fore.CYAN}Reports by Status:{Style.RESET_ALL}")
+        status_colors = {
+            "Pending": Fore.YELLOW,
+            "In Progress": Fore.CYAN,
+            "Resolved": Fore.GREEN,
+            "Rejected": Fore.RED
+        }
+        for status, count in status_stats:
+            print(f"{status_colors.get(status, '')}{status}{Style.RESET_ALL}: {count}")
+        
+        print(f"\n{Fore.CYAN}Reports by Issue Type:{Style.RESET_ALL}")
+        for issue_type, count in type_stats:
+            print(f"{issue_type}: {count}")
+        
+        print(f"\n{Fore.CYAN}Reports by Severity:{Style.RESET_ALL}")
+        severity_colors = {
+            "Low": Fore.GREEN,
+            "Medium": Fore.YELLOW,
+            "High": Fore.RED,
+            "Critical": Fore.RED + Style.BRIGHT
+        }
+        for severity, count in severity_stats:
+            print(f"{severity_colors.get(severity, '')}{severity}{Style.RESET_ALL}: {count}")
+        
+        input("\nPress Enter to continue...")
+    
+def admin_user_management():
+    """Admin function to manage users"""
+    while True:
+        clear_screen()
+        display_banner()
+        print(f"\n{Fore.MAGENTA}👥 USER MANAGEMENT{Style.RESET_ALL}\n")
+        
+        print(f"{Fore.YELLOW}1. View All Users{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}2. Add New User{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}3. Reset User Password{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}4. Back to Admin Dashboard{Style.RESET_ALL}")
+        
+        choice = input(f"\n{Fore.WHITE}Choose an option: {Style.RESET_ALL}")
+        
+        if choice == "1":
+            view_all_users()
+        elif choice == "2":
+            add_new_user()
+        elif choice == "3":
+            reset_user_password()
+        elif choice == "4":
+            return
+        else:
+            print(f"{Fore.RED}Invalid choice. Please try again.{Style.RESET_ALL}")
+            input("\nPress Enter to continue...")
+
+def view_all_users():
+    """Admin function to view all users"""
+    clear_screen()
+    display_banner()
+    print(f"\n{Fore.MAGENTA}👥 ALL USERS{Style.RESET_ALL}\n")
+    
+    conn = connect_to_db()
+    if conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, username, role, created_at FROM users ORDER BY created_at")
+        users = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        if not users:
+            print(f"{Fore.YELLOW}No users found in the system.{Style.RESET_ALL}")
+            input("\nPress Enter to continue...")
+            return
+        
+        table = PrettyTable()
+        table.field_names = ["ID", "Username", "Role", "Created"]
+        
+        for user in users:
+            role_color = Fore.MAGENTA if user[2] == "admin" else Fore.CYAN
+            table.add_row([
+                user[0],
+                user[1],
+                f"{role_color}{user[2]}{Style.RESET_ALL}",
+                user[3].strftime("%Y-%m-%d")
+            ])
+        
+        print(table)
+        input("\nPress Enter to continue...")
+
+def add_new_user():
+    """Admin function to add a new user"""
+    clear_screen()
+    display_banner()
+    print(f"\n{Fore.MAGENTA}👥 ADD NEW USER{Style.RESET_ALL}\n")
+    
+    username = input(f"{Fore.WHITE}Enter username: {Style.RESET_ALL}")
+    password = getpass.getpass(f"{Fore.WHITE}Enter password: {Style.RESET_ALL}")
+    
+    print(f"\nSelect role:")
+    print(f"{Fore.CYAN}1. Regular User{Style.RESET_ALL}")
+    print(f"{Fore.MAGENTA}2. Admin{Style.RESET_ALL}")
+    
+    role_choice = input(f"\n{Fore.WHITE}Enter choice (1-2): {Style.RESET_ALL}")
+    role = "admin" if role_choice == "2" else "user"
+    
+    conn = connect_to_db()
+    if conn:
+        cursor = conn.cursor()
+        try:
+            # Check if username already exists
+            cursor.execute("SELECT username FROM users WHERE username = %s", (username,))
+            if cursor.fetchone():
+                print(f"{Fore.RED}Username already exists. Please choose another one.{Style.RESET_ALL}")
+                cursor.close()
+                conn.close()
+                input("\nPress Enter to continue...")
+                return
+            
+            # Insert new user
+            cursor.execute("INSERT INTO users (username, password, role) VALUES (%s, %s, %s)", 
+                         (username, password, role))
+            conn.commit()
+            
+            loading_animation("Creating account")
+            print(f"{Fore.GREEN}✅ User added successfully!{Style.RESET_ALL}")
+            
+            cursor.close()
+            conn.close()
+            input("\nPress Enter to continue...")
+        except mysql.connector.Error as err:
+            logging.error(f"Error adding user: {err}")
+            print(f"{Fore.RED}Error adding user: {err}{Style.RESET_ALL}")
+            cursor.close()
+            conn.close()
+            input("\nPress Enter to continue...")
+
+def reset_user_password():
+    """Admin function to reset a user's password"""
+    clear_screen()
+    display_banner()
+    print(f"\n{Fore.MAGENTA}🔑 RESET USER PASSWORD{Style.RESET_ALL}\n")
+    
+    username = input(f"{Fore.WHITE}Enter username: {Style.RESET_ALL}")
+    
+    conn = connect_to_db()
+    if conn:
+        cursor = conn.cursor()
+        
+        # Check if user exists
+        cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+        user = cursor.fetchone()
+        
+        if not user:
+            print(f"{Fore.RED}User not found.{Style.RESET_ALL}")
+            cursor.close()
+            conn.close()
+            input("\nPress Enter to continue...")
+            return
+        
+        new_password = getpass.getpass(f"{Fore.WHITE}Enter new password: {Style.RESET_ALL}")
+        confirm_password = getpass.getpass(f"{Fore.WHITE}Confirm new password: {Style.RESET_ALL}")
+        
+        if new_password != confirm_password:
+            print(f"{Fore.RED}Passwords do not match.{Style.RESET_ALL}")
+            cursor.close()
+            conn.close()
+            input("\nPress Enter to continue...")
+            return
+        
+        try:
+            cursor.execute("UPDATE users SET password = %s WHERE username = %s", (new_password, username))
+            conn.commit()
+            
+            loading_animation("Resetting password")
+            print(f"{Fore.GREEN}✅ Password reset successfully!{Style.RESET_ALL}")
+            
+            cursor.close()
+            conn.close()
+            input("\nPress Enter to continue...")
+        except mysql.connector.Error as err:
+            logging.error(f"Error resetting password: {err}")
+            print(f"{Fore.RED}Error resetting password: {err}{Style.RESET_ALL}")
+            cursor.close()
+            conn.close()
+            input("\nPress Enter to continue...")
+
+
+def main():
+    """Main function to run the application"""
+    # Configure logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        filename='infrastructure_app.log'
+    )
+    
+    clear_screen()
+    display_banner()
+    
+    # Ask if database setup is needed (first run)
+    print(f"\n{Fore.CYAN}Community Infrastructure Reporting System{Style.RESET_ALL}")
+    setup_db = input(f"\n{Fore.YELLOW}Do you want to set up/reset the database? (y/n): {Style.RESET_ALL}")
+    if setup_db.lower() == 'y':
+        setup_database()
+    
+    while True:
+        clear_screen()
+        display_banner()
+        print(f"\n{Fore.CYAN}Welcome to the Community Infrastructure Reporting System{Style.RESET_ALL}\n")
+        
+        print(f"{Fore.YELLOW}1. Login{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}2. Sign Up{Style.RESET_ALL}")
+        print(f"{Fore.YELLOW}3. Exit{Style.RESET_ALL}")
+        
+        choice = input(f"\n{Fore.WHITE}Choose an option: {Style.RESET_ALL}")
+        
+        if choice == "1":
+            user = login()
+            if user:
+                user_id, username, role = user
+                if role == "admin":
+                    display_admin_dashboard(user_id, username)
+                else:
+                    display_user_dashboard(user_id, username)
+        elif choice == "2":
+            signup()
+        elif choice == "3":
+            print(f"{Fore.GREEN}Thank you for using our system. Goodbye!{Style.RESET_ALL}")
+            break
+        else:
+            print(f"{Fore.RED}Invalid choice. Please try again.{Style.RESET_ALL}")
+            input("\nPress Enter to continue...")
+
+if __name__ == "__main__":
+    main()
