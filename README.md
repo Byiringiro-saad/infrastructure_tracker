@@ -122,5 +122,6 @@ The application uses two main tables:
 
 ## Security Notes
 
-- Password storage is currently implemented without proper hashing.
-- Database credentials are hardcoded in the application.
+- **Password Security**: Currently, passwords are stored without hashing. This is a security risk, and we recommend implementing a hashing mechanism like `bcrypt` to securely store user passwords.
+- **Database Credentials**: Database credentials are hardcoded in the application, which poses a security risk. A better approach is to use environment variables (`.env` file) to store credentials securely.
+- **Input Validation**: Currently, there is limited input validation. Implementing stricter validation can prevent SQL injection and other security vulnerabilities.
