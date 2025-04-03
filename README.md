@@ -116,7 +116,7 @@ The application uses two main tables:
 
 1. **Login/Registration**: Users can log in or register for a new account
 2. **Dashboard**: Different dashboards for users and admins
-3. **Issue Reporting**: Users can report new infrastructure issues
+3. **Issue Reporting**: Users can report new infrastructure issues and insert pictures if necessary.
 4. **Issue Tracking**: Both users and admins can track the status of reports
 5. **Admin Management**: Admins can manage reports and users
 
